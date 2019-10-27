@@ -1,0 +1,23 @@
+{
+  "name": "puppeteer-shopify",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PavlovVasil/puppeteer-shopify.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/PavlovVasil/puppeteer-shopify/issues"
+  },
+  "homepage": "https://github.com/PavlovVasil/puppeteer-shopify#readme",
+  "dependencies": {
+    "puppeteer": "^2.0.0"
+  }
+}
