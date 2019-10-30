@@ -15,8 +15,13 @@ const cheerio = require('cheerio');
         const $ = cheerio.load(content)
         
         //constructing all urls to be scraped
-        const linkUrls = Array.from($('._17BF0 ._3OHLp > div a')).map(elem => `${baseUrl}${$(elem).attr('href')}`)
-        
+        const linkUrls = Array
+            .from($('._17BF0 ._3OHLp > div a'))
+            .map(elem => ({
+                url: `${baseUrl}${$(elem).attr('href')}`,
+                category: $(elem).find('.Polaris-Caption').text() 
+    }))
+        console.log(linkUrls)
         linkUrls.forEach(async link => {
             const detailsPage = await browser.newPage();
             await browser.goto(link);
