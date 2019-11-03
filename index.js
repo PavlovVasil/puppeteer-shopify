@@ -2,6 +2,7 @@ const puppeteer = require('puppeteer');
 const cheerio = require('cheerio');
 const fs = require('fs').promises;
 
+// call this if you have an array of urls and want to save then as a JSON file
 const saveUrlsToFile = async (urls = [], fName = "default.json") => {
     await fs.writeFile(fName, JSON.stringify({
         urls: urls
@@ -20,7 +21,7 @@ const getExpertUrlsForSection = async (baseUrl, sectionUrl, browser) => {
     const content = await browserTab.content();
     const $ = cheerio.load(content);
     expertUrls.push(...Array.from($('.kVWrj a')).map(a => `${baseUrl}${$(a).prop('href')}`));
-    
+
     //if the nextButton is disabled, we are on the last page of this section
     let nextButton = !$('.Polaris-Pagination__Button.Polaris-Pagination__NextButton').prop('disabled');
     let nextPageQuery = "?page=";
@@ -28,7 +29,7 @@ const getExpertUrlsForSection = async (baseUrl, sectionUrl, browser) => {
     let i = 2;
     //Go to the next page and get the experts urls, until we don't have a "next" button 
     while (nextButton) {
-        //construct the next page url, but use a single tab for all the pages we are about to scrape
+        //construct the next page url and use a single tab for all the page urls we are about to scrape
         const nextPageUrl = `${sectionUrl}${nextPageQuery}${i}`;
         await browserTab.goto(nextPageUrl);
         await browserTab.waitForSelector('.kVWrj');
@@ -42,26 +43,71 @@ const getExpertUrlsForSection = async (baseUrl, sectionUrl, browser) => {
     return expertUrls;
 }
 
+// This function takes a url and extracts the details for the given expert from his/hers page
+const getExpertDetails = async (url, browser) => {
+    const details = {
+        name: '',
+        location: '',
+        languages: '',
+        about: '',
+        section: '',
+        startingPrice: 0,
+        jobsCompleted: 0,
+        rating: 0,
+        includedInPrice: '',
+        additionalPriceInfo: ''
+    };
+    const browserTab = await browser.newPage();
+    await browserTab.goto(url);
+    await browserTab.waitForSelector('._1TKSp .Polaris-DisplayText.Polaris-DisplayText--sizeLarge');
+
+    const content = await browserTab.content();
+    const $ = cheerio.load(content);
+    details.name = $('._2tuj_ ._2MboN a').text();
+    details.location = $('._3n3J7 ._3UyXZ .iec8d span').text();
+    const languages = $('._3n3J7 ._3trYk ._324Yr > .iec8d span').text();
+    const otherLanguages = ""
+    if (languages.includes('more')) {
+        await browserTab.hover('._3n3J7 ._3trYk ._324Yr > .iec8d span');
+        await browserTab.waitForSelector('.Polaris-Tooltip');
+        otherLanguages = $('.Polaris-Tooltip__Label').text();
+    }
+    details.languages = otherLanguages !== '' ? `${languages}, ${otherLanguages}` : languages;
+    details.about = $('._3HKB3 ._3xhwh p').text();
+    details.section = $('.HYncG h2').text();
+    //unfortunately the DOM structure is very nested and does not allow the usage of more concise CSS selectors...
+    details.startingPrice = $('.HYncG .eB8wo .YFs8N:nth-child(1) ._3657d').text();
+    details.jobsCompleted = $('.HYncG .eB8wo .YFs8N:nth-child(2) ._3657d .Polaris-Stack__Item:nth-child(2)').text();
+    details.rating = $('.HYncG .eB8wo .YFs8N:nth-child(3) ._3657d .Polaris-Stack__Item:nth-child(2) .Polaris-Stack__Item:nth-child(1)').text();
+    details.includedInPrice = $('.cGBf6 .Polaris-TextContainer:nth-child(1) pre').text();
+    details.additionalPriceInfo = $('.cGBf6 .Polaris-TextContainer:nth-child(2) pre').text();
+    return details;
+}
+
+
 (async () => {
     try {
         const baseUrl = 'https://experts.shopify.com';
         //const baseSectionUrl = 'https://experts.shopify.com/services/visual-content-and-branding/develop-brand-look-and-feel';
+        const expertDetailsUrl = 'https://experts.shopify.com/codevibez/customize-design';
         const allExperts = [];
         const browser = await puppeteer.launch();
         const page = await browser.newPage();
         page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.70 Safari/537.36');
         await page.goto(baseUrl);
-        let content = await page.content();
-        const $ = cheerio.load(content);
+        // let content = await page.content();
+        // const $ = cheerio.load(content);
 
-        //get all the section urls
-        const sectionUrls = Array.from($('._17BF0 ._3OHLp > div a')).map(elem => `${baseUrl}${$(elem).attr('href')}`);
-        for (const sectionUrl of sectionUrls) {
-            //get all the experts details pages urls for the current section
-            const expertsForSection = await getExpertUrlsForSection(baseUrl, sectionUrl, browser);
-            allExperts.push(...expertsForSection);
-        }
-        await saveUrlsToFile(allExperts, 'allExperts.json');
+        // //get all the section urls
+        // const sectionUrls = Array.from($('._17BF0 ._3OHLp > div a')).map(elem => `${baseUrl}${$(elem).attr('href')}`);
+        // for (const sectionUrl of sectionUrls) {
+        //     //get all the experts details pages urls for the current section
+        //     const expertsForSection = await getExpertUrlsForSection(baseUrl, sectionUrl, browser);
+        //     allExperts.push(...expertsForSection);
+        // }
+        // await saveUrlsToFile(allExperts, 'allExperts.json');
+
+        await getExpertDetails(expertDetailsUrl, browser);
         await browser.close();
     } catch (e) {
         console.log(`our error: ${e}`);
