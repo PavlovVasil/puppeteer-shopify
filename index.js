@@ -11,8 +11,8 @@ const saveUrlsToFile = async (urls = [], fName = "default.json") => {
 
 /*This function expects a url for a given section with Shopify experts and scrapes their details pages urls.
 We don't have a real pagination, because there is no indication of the number of all pages, only "prev" and "next buttons".
-Also the "next" button does not have a url that could use. So we have to construct the urls by checking
-if it is disabled or not instead.*/
+Also the "next" button does not have a url that could use. Instead, we have to construct the urls by checking
+if it is disabled or not.*/
 const getExpertUrlsForSection = async (baseUrl, sectionUrl, browser) => {
     const expertUrls = [];
     const browserTab = await browser.newPage();
@@ -66,7 +66,7 @@ const getExpertDetails = async (url, browser) => {
     details.name = $('._2tuj_ ._2MboN a').text();
     details.location = $('._3n3J7 ._3UyXZ .iec8d span').text();
     details.languages = $('._3n3J7 ._3trYk ._324Yr > .iec8d span').text();
-    //check if the div containing the "(+ n more)" languages text exists, and whether we have a tooltip for them or not
+    //checkings if the div containing the "(+ n more)" languages text exists - if it does, we have a tooltip to hover
     if ($('._2gIX3').length > 0) {
         await browserTab.hover('._3n3J7 ._3trYk ._324Yr > .iec8d span');
         await browserTab.waitForSelector('.Polaris-Tooltip__Label');
@@ -79,7 +79,7 @@ const getExpertDetails = async (url, browser) => {
     }
     details.about = $('._3HKB3 ._3xhwh p').text();
     details.section = $('.HYncG h2').text();
-    //getting only numbers from the "price" string by using regex and converting the resulting array into a new string for parseInt
+    //getting only numbers from the "price" string by using regex and converting the resulting array into a new string to pass to parseInt()
     details.startingPrice = parseInt(
         $('.HYncG .eB8wo .YFs8N:nth-child(1) ._3657d').text().match(/\d/g).join(""), 10);
     details.jobsCompleted = parseInt(
