@@ -16,8 +16,6 @@ const getExpertUrlsForSection = async (baseUrl, sectionUrl, browser) => {
     const content = await browserTab.content();
     const $ = cheerio.load(content);
     expertUrls.push(...Array.from($('.kVWrj a')).map(a => `${baseUrl}${$(a).prop('href')}`));
-
-    //let test = $('.Polaris-Pagination__Button.Polaris-Pagination__NextButton').prop('disabled');
     
     //if the nextButton is disabled, we are on the last page of this section
     let nextButton = !$('.Polaris-Pagination__Button.Polaris-Pagination__NextButton').prop('disabled');
@@ -41,8 +39,8 @@ const getExpertUrlsForSection = async (baseUrl, sectionUrl, browser) => {
 (async () => {
     try {
         const baseUrl = 'https://experts.shopify.com';
-        const baseSectionUrl = 'https://experts.shopify.com/services/visual-content-and-branding/develop-brand-look-and-feel';
-
+        //const baseSectionUrl = 'https://experts.shopify.com/services/visual-content-and-branding/develop-brand-look-and-feel';
+        const allExperts = [];
         const browser = await puppeteer.launch({
             headless: false
         });
@@ -52,13 +50,14 @@ const getExpertUrlsForSection = async (baseUrl, sectionUrl, browser) => {
         let content = await page.content();
         const $ = cheerio.load(content);
 
-        //get the section urls
+        //get all the section urls
         const sectionUrls = Array.from($('._17BF0 ._3OHLp > div a')).map(elem => `${baseUrl}${$(elem).attr('href')}`);
-        //await saveUrlsToFile(sectionUrls, 'sectionUrls.json');
-
-
-        const expertsForSection = await getExpertUrlsForSection(baseUrl, baseSectionUrl, browser);
-        await saveUrlsToFile(expertsForSection, 'sectionExpertsUrls.json');
+        for (const sectionUrl of sectionUrls) {
+            //get all the urls for the experts details pages for the current section
+            const expertsForSection = await getExpertUrlsForSection(baseUrl, sectionUrl, browser);
+            allExperts.push(...expertsForSection);
+        }
+        await saveUrlsToFile(allExperts, 'allExperts.json');
         await browser.close();
     } catch (e) {
         console.log(`our error: ${e}`);
