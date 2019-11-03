@@ -65,20 +65,28 @@ const getExpertDetails = async (url, browser) => {
     const $ = cheerio.load(content);
     details.name = $('._2tuj_ ._2MboN a').text();
     details.location = $('._3n3J7 ._3UyXZ .iec8d span').text();
-    const languages = $('._3n3J7 ._3trYk ._324Yr > .iec8d span').text();
-    const otherLanguages = ""
-    if (languages.includes('more')) {
+    details.languages = $('._3n3J7 ._3trYk ._324Yr > .iec8d span').text();
+    //check if the div containing the "(+ n more)" languages text exists, and whether we have a tooltip for them or not
+    if ($('._2gIX3').length > 0) {
         await browserTab.hover('._3n3J7 ._3trYk ._324Yr > .iec8d span');
-        await browserTab.waitForSelector('.Polaris-Tooltip');
-        otherLanguages = $('.Polaris-Tooltip__Label').text();
+        await browserTab.waitForSelector('.Polaris-Tooltip__Label');
+        /* The DOM structure changes after the hover (the div has "portal" class, the site might be using React)
+        so we have to pass the new HTML to Cheerio */
+        const newContent = await browserTab.content()
+        const _$ = cheerio.load(newContent);
+        const otherLanguages = _$('.Polaris-Tooltip__Label').text();
+        details.languages = `${details.languages}, ${otherLanguages}`;
     }
-    details.languages = otherLanguages !== '' ? `${languages}, ${otherLanguages}` : languages;
     details.about = $('._3HKB3 ._3xhwh p').text();
     details.section = $('.HYncG h2').text();
+    //getting only numbers from the "price" string by using regex and converting the resulting array into a new string for parseInt
+    details.startingPrice = parseInt(
+        $('.HYncG .eB8wo .YFs8N:nth-child(1) ._3657d').text().match(/\d/g).join(""), 10);
+    details.jobsCompleted = parseInt(
+        $('.HYncG .eB8wo .YFs8N:nth-child(2) ._3657d .Polaris-Stack__Item:nth-child(2)').text(), 10);
     //unfortunately the DOM structure is very nested and does not allow the usage of more concise CSS selectors...
-    details.startingPrice = $('.HYncG .eB8wo .YFs8N:nth-child(1) ._3657d').text();
-    details.jobsCompleted = $('.HYncG .eB8wo .YFs8N:nth-child(2) ._3657d .Polaris-Stack__Item:nth-child(2)').text();
-    details.rating = $('.HYncG .eB8wo .YFs8N:nth-child(3) ._3657d .Polaris-Stack__Item:nth-child(2) .Polaris-Stack__Item:nth-child(1)').text();
+    details.rating = parseFloat(
+        $('.HYncG .eB8wo .YFs8N:nth-child(3) ._3657d .Polaris-Stack__Item:nth-child(2) .Polaris-Stack__Item:nth-child(1)').text());
     details.includedInPrice = $('.cGBf6 .Polaris-TextContainer:nth-child(1) pre').text();
     details.additionalPriceInfo = $('.cGBf6 .Polaris-TextContainer:nth-child(2) pre').text();
     return details;
