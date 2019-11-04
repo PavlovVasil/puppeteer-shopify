@@ -1,6 +1,9 @@
 const puppeteer = require('puppeteer');
 const cheerio = require('cheerio');
 const fs = require('fs').promises;
+const Database = require('sqlite-async');
+
+
 
 // call this if you have an array of urls and want to save then as a JSON file
 const saveUrlsToFile = async (urls = [], fName = "default.json") => {
@@ -96,12 +99,21 @@ const getExpertDetails = async (url, browser) => {
 
 
 (async () => {
+
+    const DB_PATH = ':memory';
+    try {
+        let db  = await Database.open(DB_PATH);
+    } catch(error) {
+        throw Error(`cannot access the database: ${error}`)
+    }
     try {
         const baseUrl = 'https://experts.shopify.com';
         //const baseSectionUrl = 'https://experts.shopify.com/services/visual-content-and-branding/develop-brand-look-and-feel';
         const expertDetailsUrl = 'https://experts.shopify.com/codevibez/customize-design';
         const allExperts = [];
-        const browser = await puppeteer.launch({headless: false});
+        const browser = await puppeteer.launch({
+            headless: false
+        });
         const page = await browser.newPage();
         page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.70 Safari/537.36');
         await page.goto(baseUrl);
@@ -119,7 +131,7 @@ const getExpertDetails = async (url, browser) => {
 
         await getExpertDetails(expertDetailsUrl, browser);
         await browser.close();
-    } catch (e) {
-        console.log(`our error: ${e}`);
+    } catch (error) {
+        console.log(`our error: ${error}`);
     }
 })()
