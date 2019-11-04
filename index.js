@@ -102,7 +102,21 @@ const getExpertDetails = async (url, browser) => {
 
     const DB_PATH = ':memory';
     try {
-        let db  = await Database.open(DB_PATH);
+        const db  = await Database.open(DB_PATH);
+        const dbSchema = `CREATE TABLE IF NOT EXISTS Experts (
+            id INTEGER NOT NULL PRIMARY KEY,
+            url TEXT NOT NULL,
+            name TEXT NOT NULL,
+            location TEXT NOT NULL,
+            languanges TEXT NOT NULL,
+            about TEXT NOT NULL,
+            starting_price INTEGER NOT NULL,
+            jobs_completed INTEGER NOT NULL,
+            rating REAL NOT NULL,
+            included_in_price TEXT NOT NULL,
+            additional_price_info TEXT NOT NULL
+        );`
+        await db.exec(dbSchema)
     } catch(error) {
         throw Error(`cannot access the database: ${error}`)
     }
