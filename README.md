@@ -8,7 +8,7 @@ You would need Node.js version 12 or above installed on your system.
 Navigate to the root folder and then use these commands: 
 
 1. Install the dependencies: ```npm i```
-2. Run the scraper: ```node index.js```
+2. Run the scraper: ```npm run scraper```
 
 ### Details
 
