@@ -46,6 +46,7 @@ const getExpertUrlsForSection = async (baseUrl, sectionUrl, browser) => {
 // This function takes a url and extracts the details for the given expert from his/hers page
 const getExpertDetails = async (url, browser) => {
     const details = {
+        url: url,
         name: '',
         location: '',
         languages: '',
@@ -89,6 +90,7 @@ const getExpertDetails = async (url, browser) => {
         $('.HYncG .eB8wo .YFs8N:nth-child(3) ._3657d .Polaris-Stack__Item:nth-child(2) .Polaris-Stack__Item:nth-child(1)').text());
     details.includedInPrice = $('.cGBf6 .Polaris-TextContainer:nth-child(1) pre').text();
     details.additionalPriceInfo = $('.cGBf6 .Polaris-TextContainer:nth-child(2) pre').text();
+    browserTab.close();
     return details;
 }
 
@@ -99,7 +101,7 @@ const getExpertDetails = async (url, browser) => {
         //const baseSectionUrl = 'https://experts.shopify.com/services/visual-content-and-branding/develop-brand-look-and-feel';
         const expertDetailsUrl = 'https://experts.shopify.com/codevibez/customize-design';
         const allExperts = [];
-        const browser = await puppeteer.launch();
+        const browser = await puppeteer.launch({headless: false});
         const page = await browser.newPage();
         page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.70 Safari/537.36');
         await page.goto(baseUrl);
