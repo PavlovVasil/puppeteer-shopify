@@ -97,8 +97,8 @@ const getExpertDetails = async (url, browser) => {
 
 (async () => {
     const DB_PATH = './db/experts.db';
+    const db = await Database.open(DB_PATH);
     try {
-        const db  = await Database.open(DB_PATH);
         const dbSchema = `CREATE TABLE IF NOT EXISTS experts (
             id INTEGER NOT NULL PRIMARY KEY,
             url TEXT NOT NULL,
@@ -112,8 +112,8 @@ const getExpertDetails = async (url, browser) => {
             included_in_price TEXT NOT NULL,
             additional_price_info TEXT NOT NULL
         );`
-        await db.exec(dbSchema)
-    } catch(error) {
+        await db.run(dbSchema);
+    } catch (error) {
         throw Error(`cannot access the database: ${error}`)
     }
     try {
@@ -140,8 +140,21 @@ const getExpertDetails = async (url, browser) => {
         // await saveUrlsToFile(allExperts, 'allExperts.json');
 
         const details = await getExpertDetails(expertDetailsUrl, browser);
+        const {
+            url,
+            name,
+            location,
+            languages,
+            about,
+            startingPrice,
+            jobsCompleted,
+            rating,
+            includedInPrice,
+            additionalPriceInfo
+        } = details
+        console.log(details)
         try {
-            db.exec(`INSERT INTO experts (
+            await db.run(`INSERT INTO experts (
                 url, 
                 name, 
                 location, 
@@ -151,20 +164,19 @@ const getExpertDetails = async (url, browser) => {
                 jobs_completed, 
                 rating, 
                 included_in_price, 
-                additional_price) VALUES(?, ? ,? ,? ,?, ?, ?, ?, ?, ?)`, 
-                ({
-                    url,
-                    name,
-                    location,
-                    languages,
-                    about,
-                    startingPrice,
-                    jobsCompleted,
-                    rating,
-                    includedInPrice,
-                    additionalPriceInfo} = details))
+                additional_price_info) VALUES (?,?,?,?,?,?,?,?,?,?)`,
+                url,
+                name,
+                location,
+                languages,
+                about,
+                startingPrice,
+                jobsCompleted,
+                rating,
+                includedInPrice,
+                additionalPriceInfo)
         } catch (error) {
-            throw Error (`Could not add new user`);
+            throw Error(error);
         }
         await browser.close();
     } catch (error) {
