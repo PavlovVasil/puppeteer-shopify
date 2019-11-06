@@ -3,8 +3,6 @@ const cheerio = require('cheerio');
 const fs = require('fs').promises;
 const Database = require('sqlite-async');
 
-
-
 // call this if you have an array of urls and want to save then as a JSON file
 const saveUrlsToFile = async (urls = [], fName = "default.json") => {
     await fs.writeFile(fName, JSON.stringify({
@@ -97,18 +95,16 @@ const getExpertDetails = async (url, browser) => {
     return details;
 }
 
-
 (async () => {
-
-    const DB_PATH = ':memory';
+    const DB_PATH = './db/experts.db';
     try {
         const db  = await Database.open(DB_PATH);
-        const dbSchema = `CREATE TABLE IF NOT EXISTS Experts (
+        const dbSchema = `CREATE TABLE IF NOT EXISTS experts (
             id INTEGER NOT NULL PRIMARY KEY,
             url TEXT NOT NULL,
             name TEXT NOT NULL,
             location TEXT NOT NULL,
-            languanges TEXT NOT NULL,
+            languages TEXT NOT NULL,
             about TEXT NOT NULL,
             starting_price INTEGER NOT NULL,
             jobs_completed INTEGER NOT NULL,
@@ -143,7 +139,33 @@ const getExpertDetails = async (url, browser) => {
         // }
         // await saveUrlsToFile(allExperts, 'allExperts.json');
 
-        await getExpertDetails(expertDetailsUrl, browser);
+        const details = await getExpertDetails(expertDetailsUrl, browser);
+        try {
+            db.exec(`INSERT INTO experts (
+                url, 
+                name, 
+                location, 
+                languages, 
+                about, 
+                starting_price, 
+                jobs_completed, 
+                rating, 
+                included_in_price, 
+                additional_price) VALUES(?, ? ,? ,? ,?, ?, ?, ?, ?, ?)`, 
+                ({
+                    url,
+                    name,
+                    location,
+                    languages,
+                    about,
+                    startingPrice,
+                    jobsCompleted,
+                    rating,
+                    includedInPrice,
+                    additionalPriceInfo} = details))
+        } catch (error) {
+            throw Error (`Could not add new user`);
+        }
         await browser.close();
     } catch (error) {
         console.log(`our error: ${error}`);
