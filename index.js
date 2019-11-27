@@ -10,10 +10,10 @@ const saveUrlsToFile = async (urls = [], fName = "default.json") => {
     }));
 }
 
-/*This function expects a url for a given section with Shopify experts and scrapes their details pages urls.
+/*Scrape the experts details pages for a given section from its url
 We don't have a real pagination, because there is no indication of the number of all pages, only "prev" and "next buttons".
-Also the "next" button does not have a url that could use. Instead, we have to construct the urls by checking
-if it is disabled or not.*/
+Also the "next" button does not have a url that we could use. Instead, we have to construct the urls by checking
+if the next page button is disabled or not.*/
 const getExpertUrlsForSection = async (baseUrl, sectionUrl, browser) => {
     const expertUrls = [];
     const browserTab = await browser.newPage();
@@ -44,7 +44,7 @@ const getExpertUrlsForSection = async (baseUrl, sectionUrl, browser) => {
     return expertUrls;
 }
 
-// This function takes a url and extracts the details for the given expert from his/hers page
+// Extract the details for a given expert from the details page
 const getExpertDetails = async (url, browser) => {
     const details = {
         url: url,
@@ -68,12 +68,11 @@ const getExpertDetails = async (url, browser) => {
     details.name = $('._2tuj_ ._2MboN a').text();
     details.location = $('._3n3J7 ._3UyXZ .iec8d span').text();
     details.languages = $('._3n3J7 ._3trYk ._324Yr > .iec8d span').text();
-    //checkings if the div containing the "(+ n more)" languages text exists - if it does, we have a tooltip to hover
+    // Checking if the div containing the "(+ n more)" languages text exists - if it does, we have a tooltip to hover
     if ($('._2gIX3').length > 0) {
         await browserTab.hover('._3n3J7 ._3trYk ._324Yr > .iec8d span');
         await browserTab.waitForSelector('.Polaris-Tooltip__Label');
-        /* The DOM structure changes after the hover (the div has "portal" class, the site might be using React)
-        so we have to pass the new HTML to Cheerio */
+        // The DOM structure changes after the hover so we have to pass the new HTML to Cheerio.
         const newContent = await browserTab.content()
         const _$ = cheerio.load(newContent);
         const otherLanguages = _$('.Polaris-Tooltip__Label').text();
@@ -81,12 +80,12 @@ const getExpertDetails = async (url, browser) => {
     }
     details.about = $('._3HKB3 ._3xhwh p').text();
     details.section = $('.HYncG h2').text();
-    //getting only numbers from the "price" string by using regex and converting the resulting array into a new string to pass to parseInt()
+    // Getting only numbers from the "price" string by using regex and converting the resulting array into a new string to pass to parseInt()
     details.startingPrice = parseInt(
         $('.HYncG .eB8wo .YFs8N:nth-child(1) ._3657d').text().match(/\d/g).join(""), 10);
     details.jobsCompleted = parseInt(
         $('.HYncG .eB8wo .YFs8N:nth-child(2) ._3657d .Polaris-Stack__Item:nth-child(2)').text(), 10);
-    //unfortunately the DOM structure is very nested and does not allow the usage of more concise CSS selectors...
+    // Unfortunately the DOM structure is very nested and does not allow the usage of more concise CSS selectors
     details.rating = parseFloat(
         $('.HYncG .eB8wo .YFs8N:nth-child(3) ._3657d .Polaris-Stack__Item:nth-child(2) .Polaris-Stack__Item:nth-child(1)').text());
     details.includedInPrice = $('.cGBf6 .Polaris-TextContainer:nth-child(1) pre').text();
